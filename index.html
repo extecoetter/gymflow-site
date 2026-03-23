@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GymFlow | Sistema inteligente para academias</title>
+  <meta name="description" content="GymFlow: sistema inteligente de orientação de exercícios por QR Code para academias." />
+  <style>
+    :root{
+      --bg:#0b0b0d;
+      --bg-2:#121216;
+      --card:#17171d;
+      --soft:#23232c;
+      --text:#f6f6f8;
+      --muted:#b8b8c2;
+      --orange:#ff6a00;
+      --orange-2:#ff8c1a;
+      --line:rgba(255,255,255,.08);
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:24px;
+      --max:1180px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(255,106,0,.16), transparent 28%),
+        radial-gradient(circle at left center, rgba(255,106,0,.08), transparent 24%),
+        linear-gradient(180deg, #0a0a0c 0%, #101014 55%, #0b0b0d 100%);
+      color:var(--text);
+    }
+
+    a{text-decoration:none;color:inherit}
+    img{max-width:100%;display:block}
+
+    .container{
+      width:min(calc(100% - 32px), var(--max));
+      margin:0 auto;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:40;
+      backdrop-filter: blur(12px);
+      background:rgba(8,8,10,.72);
+      border-bottom:1px solid var(--line);
+    }
+
+    .topbar-inner{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      min-height:74px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.4px;
+    }
+
+    .brand-mark{
+      width:42px;
+      height:42px;
+      border-radius:14px;
+      background:linear-gradient(135deg,var(--orange),var(--orange-2));
+      box-shadow:0 10px 30px rgba(255,106,0,.28);
+      display:grid;
+      place-items:center;
+      color:#111;
+      font-weight:900;
+      font-size:18px;
+    }
+
+    .brand-name{
+      font-size:1.1rem;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .nav a{
+      color:var(--muted);
+      padding:10px 14px;
+      border-radius:12px;
+      transition:.2s ease;
+      font-size:.95rem;
+    }
+
+    .nav a:hover{color:#fff;background:rgba(255,255,255,.05)}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height:52px;
+      padding:0 22px;
+      border-radius:16px;
+      font-weight:800;
+      border:1px solid transparent;
+      transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+      cursor:pointer;
+    }
+
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{
+      background:linear-gradient(135deg,var(--orange),var(--orange-2));
+      color:#111;
+      box-shadow:0 14px 34px rgba(255,106,0,.28);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,.04);
+      color:#fff;
+      border-color:rgba(255,255,255,.10);
+    }
+
+    .hero{
+      padding:56px 0 34px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:36px;
+      align-items:center;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,106,0,.12);
+      border:1px solid rgba(255,106,0,.26);
+      color:#ffd2ad;
+      font-size:.92rem;
+      font-weight:700;
+      margin-bottom:18px;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(2.2rem, 5vw, 4.5rem);
+      line-height:1.02;
+      letter-spacing:-1.6px;
+    }
+
+    .hero p.lead{
+      margin:18px 0 0;
+      color:var(--muted);
+      font-size:1.14rem;
+      line-height:1.65;
+      max-width:680px;
+    }
+
+    .hero-list{
+      margin:24px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:12px;
+    }
+
+    .hero-list li{
+      display:flex;
+      align-items:flex-start;
+      gap:12px;
+      color:#f0f0f3;
+      font-size:1.02rem;
+    }
+
+    .hero-list span{
+      width:26px;
+      height:26px;
+      flex:0 0 26px;
+      display:grid;
+      place-items:center;
+      border-radius:999px;
+      background:rgba(255,106,0,.16);
+      color:#ffb06e;
+      font-weight:900;
+      margin-top:1px;
+    }
+
+    .cta-row{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:28px;
+    }
+
+    .hero-card{
+      position:relative;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+        linear-gradient(135deg, rgba(255,106,0,.18), rgba(255,106,0,0) 55%);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:32px;
+      padding:26px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      min-height:540px;
+    }
+
+    .glow{
+      position:absolute;
+      right:-40px;
+      top:-40px;
+      width:180px;
+      height:180px;
+      border-radius:999px;
+      background:radial-gradient(circle, rgba(255,106,0,.35) 0%, rgba(255,106,0,0) 72%);
+      pointer-events:none;
+    }
+
+    .phone{
+      width:min(100%, 320px);
+      margin:14px auto 0;
+      border-radius:36px;
+      padding:14px;
+      background:linear-gradient(180deg,#202026,#111115);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 20px 60px rgba(0,0,0,.45);
+    }
+
+    .phone-screen{
+      background:linear-gradient(180deg,#fff,#f4f4f6);
+      border-radius:24px;
+      padding:16px;
+      color:#111;
+      min-height:500px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .demo-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:16px;
+    }
+
+    .demo-logo{
+      font-weight:900;
+      color:var(--orange);
+      font-size:1.15rem;
+    }
+
+    .demo-chip{
+      background:#111;
+      color:#fff;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:700;
+    }
+
+    .demo-video{
+      height:188px;
+      border-radius:22px;
+      background:
+        linear-gradient(135deg, rgba(255,106,0,.18), rgba(255,106,0,.04)),
+        linear-gradient(180deg, #ececf0, #d9d9df);
+      display:grid;
+      place-items:center;
+      font-size:3.2rem;
+      margin-bottom:16px;
+      border:1px solid rgba(0,0,0,.06);
+    }
+
+    .demo-title{
+      font-size:1.15rem;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .demo-text{
+      color:#555;
+      line-height:1.55;
+      font-size:.96rem;
+    }
+
+    .demo-qr{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:86px 1fr;
+      gap:12px;
+      align-items:center;
+      background:#fafafa;
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:18px;
+      padding:12px;
+    }
+
+    .qr-box{
+      width:86px;
+      height:86px;
+      border-radius:14px;
+      background:
+        conic-gradient(from 90deg at 12px 12px, #111 0 25%, transparent 0 100%),
+        repeating-linear-gradient(90deg,#111 0 8px,#fff 8px 12px),
+        repeating-linear-gradient(#111 0 8px,#fff 8px 12px);
+      background-size:26px 26px,100% 100%,100% 100%;
+      background-position:0 0,0 0,0 0;
+      border:6px solid #111;
+    }
+
+    section{
+      padding:38px 0;
+    }
+
+    .section-head{
+      max-width:760px;
+      margin-bottom:22px;
+    }
+
+    .eyebrow{
+      color:#ffb06e;
+      font-weight:800;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+      font-size:.86rem;
+      margin-bottom:10px;
+    }
+
+    h2{
+      margin:0 0 10px;
+      font-size:clamp(1.7rem, 3vw, 3rem);
+      line-height:1.08;
+      letter-spacing:-1px;
+    }
+
+    .section-head p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:1.03rem;
+    }
+
+    .grid-3{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:18px;
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+    }
+
+    .icon{
+      width:52px;
+      height:52px;
+      border-radius:16px;
+      display:grid;
+      place-items:center;
+      background:rgba(255,106,0,.14);
+      color:#ffb06e;
+      font-size:1.35rem;
+      margin-bottom:14px;
+    }
+
+    .card h3{
+      margin:0 0 8px;
+      font-size:1.12rem;
+    }
+
+    .card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .steps{
+      display:grid;
+      gap:16px;
+    }
+
+    .step{
+      display:grid;
+      grid-template-columns:72px 1fr;
+      gap:16px;
+      align-items:flex-start;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:20px;
+    }
+
+    .step-number{
+      width:58px;
+      height:58px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,var(--orange),var(--orange-2));
+      color:#111;
+      font-size:1.28rem;
+      font-weight:900;
+    }
+
+    .mock-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:18px;
+    }
+
+    .mock{
+      background:linear-gradient(180deg,#1b1b21,#121217);
+      border:1px solid var(--line);
+      border-radius:26px;
+      padding:18px;
+      min-height:240px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .mock::before{
+      content:"";
+      position:absolute;
+      inset:auto -25px -25px auto;
+      width:120px;
+      height:120px;
+      border-radius:999px;
+      background:radial-gradient(circle, rgba(255,106,0,.22), rgba(255,106,0,0) 70%);
+    }
+
+    .mock-label{
+      display:inline-block;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(255,106,0,.14);
+      color:#ffb06e;
+      font-size:.8rem;
+      font-weight:800;
+      margin-bottom:14px;
+    }
+
+    .mock h4{
+      margin:0 0 8px;
+      font-size:1.15rem;
+    }
+
+    .mock p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .price-wrap{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .price-card{
+      background:linear-gradient(180deg, rgba(255,106,0,.14), rgba(255,255,255,.03));
+      border:1px solid rgba(255,106,0,.28);
+      border-radius:28px;
+      padding:26px;
+      box-shadow:var(--shadow);
+    }
+
+    .price-kicker{
+      color:#ffb06e;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+      font-size:.85rem;
+      margin-bottom:10px;
+    }
+
+    .price-big{
+      font-size:3.1rem;
+      line-height:1;
+      font-weight:900;
+      margin:8px 0 4px;
+    }
+
+    .price-note{
+      color:var(--muted);
+      font-size:1rem;
+      margin-bottom:20px;
+    }
+
+    .price-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:grid;
+      gap:12px;
+    }
+
+    .price-list li{
+      display:flex;
+      gap:10px;
+      color:#f1f1f4;
+    }
+
+    .price-list span{
+      color:#ffb06e;
+      font-weight:900;
+    }
+
+    .faq{
+      display:grid;
+      gap:14px;
+    }
+
+    .faq-item{
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      padding:18px 20px;
+    }
+
+    .faq-item h3{
+      margin:0 0 8px;
+      font-size:1.06rem;
+    }
+
+    .faq-item p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .cta-section{
+      padding:34px 0 68px;
+    }
+
+    .cta-box{
+      border-radius:30px;
+      background:
+        radial-gradient(circle at top right, rgba(255,106,0,.22), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.025));
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      padding:32px;
+      text-align:center;
+    }
+
+    .cta-box p{
+      margin:12px auto 0;
+      max-width:720px;
+      color:var(--muted);
+      line-height:1.65;
+    }
+
+    footer{
+      border-top:1px solid var(--line);
+      color:#9a9aa5;
+      padding:24px 0 34px;
+      font-size:.95rem;
+    }
+
+    @media (max-width: 980px){
+      .hero-grid,
+      .grid-3,
+      .grid-2,
+      .mock-grid,
+      .price-wrap{
+        grid-template-columns:1fr;
+      }
+
+      .nav{
+        display:none;
+      }
+
+      .hero{
+        padding-top:34px;
+      }
+
+      .hero-card{
+        min-height:auto;
+      }
+    }
+
+    @media (max-width: 640px){
+      .topbar-inner{
+        min-height:66px;
+      }
+
+      .brand-name{
+        font-size:1rem;
+      }
+
+      .btn{
+        width:100%;
+      }
+
+      .cta-row{
+        flex-direction:column;
+      }
+
+      .phone{
+        width:100%;
+      }
+
+      .step{
+        grid-template-columns:58px 1fr;
+      }
+
+      .container{
+        width:min(calc(100% - 24px), var(--max));
+      }
+
+      .cta-box{
+        padding:24px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#">
+        <div class="brand-mark">G</div>
+        <div class="brand-name">GymFlow</div>
+      </a>
+
+      <nav class="nav">
+        <a href="#beneficios">Benefícios</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#investimento">Investimento</a>
+      </nav>
+
+      <a class="btn btn-primary" href="https://wa.me/5514997073447?text=Olá%2C%20quero%20saber%20mais%20sobre%20o%20GymFlow" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="badge">Sistema inteligente para academias</div>
+          <h1>Transforme a experiência do aluno na sua academia</h1>
+          <p class="lead">
+            O <strong>GymFlow</strong> é um sistema de orientação de exercícios por QR Code.
+            O aluno aponta a câmera do celular para o aparelho e acessa instantaneamente
+            uma página com vídeo explicativo e orientações práticas de uso.
+          </p>
+
+          <ul class="hero-list">
+            <li><span>✓</span> Mais autonomia para o aluno na hora do treino</li>
+            <li><span>✓</span> Menos dúvidas repetidas para o instrutor</li>
+            <li><span>✓</span> Academia com imagem mais moderna e profissional</li>
+          </ul>
+
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://wa.me/5514997073447?text=Olá%2C%20quero%20implantar%20o%20GymFlow%20na%20minha%20academia" target="_blank" rel="noopener noreferrer">Quero implantar o GymFlow</a>
+            <a class="btn btn-secondary" href="#como-funciona">Ver como funciona</a>
+          </div>
+        </div>
+
+        <div class="hero-card">
+          <div class="glow"></div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="demo-top">
+                <div class="demo-logo">GymFlow</div>
+                <div class="demo-chip">QR ativo</div>
+              </div>
+
+              <div class="demo-video">▶</div>
+
+              <div class="demo-title">Exercício: Peck Deck</div>
+              <div class="demo-text">
+                O aluno escaneia o QR Code do aparelho e vê uma demonstração rápida
+                de como executar o exercício corretamente.
+              </div>
+
+              <div class="demo-qr">
+                <div class="qr-box"></div>
+                <div>
+                  <strong>Escaneie e aprenda</strong><br>
+                  <span style="color:#666;line-height:1.5;">Acesso imediato pelo celular, sem aplicativo complicado.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">O problema</div>
+          <h2>Muitos alunos ainda usam aparelhos com insegurança</h2>
+          <p>
+            Em muitas academias, o aluno não sabe usar direito alguns equipamentos,
+            executa errado, chama o instrutor toda hora ou simplesmente evita o aparelho.
+            Isso gera sobrecarga no atendimento e prejudica a experiência do treino.
+          </p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="icon">!</div>
+            <h3>Uso incorreto</h3>
+            <p>Execução errada do movimento e postura inadequada em aparelhos que exigem orientação.</p>
+          </div>
+          <div class="card">
+            <div class="icon">?</div>
+            <h3>Dúvidas repetidas</h3>
+            <p>Instrutores perdem tempo respondendo as mesmas perguntas simples ao longo do dia.</p>
+          </div>
+          <div class="card">
+            <div class="icon">×</div>
+            <h3>Equipamentos subutilizados</h3>
+            <p>Muitos alunos evitam aparelhos por não se sentirem seguros para usar sozinhos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="beneficios">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">A solução</div>
+          <h2>Um sistema simples, moderno e fácil de entender</h2>
+          <p>
+            Com o GymFlow, sua academia oferece orientação rápida e visual,
+            direto no celular do aluno, sem complicação.
+          </p>
+        </div>
+
+        <div class="grid-3">
+          <div class="card">
+            <div class="icon">📱</div>
+            <h3>Acesso rápido por QR Code</h3>
+            <p>Cada aparelho recebe um QR Code que leva para uma página personalizada do exercício.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🎥</div>
+            <h3>Vídeos demonstrativos</h3>
+            <p>O aluno visualiza rapidamente como fazer o exercício de forma mais correta e segura.</p>
+          </div>
+          <div class="card">
+            <div class="icon">🏆</div>
+            <h3>Mais valor para a academia</h3>
+            <p>Seu espaço passa uma imagem de tecnologia, organização e cuidado com a experiência do aluno.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="como-funciona">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Como funciona</div>
+          <h2>Implantação simples em 3 passos</h2>
+          <p>
+            O processo é rápido, visual e pensado para ser fácil de colocar em funcionamento.
+          </p>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div>
+              <h3>Instalação dos QR Codes</h3>
+              <p>Cada aparelho recebe um QR Code para acesso imediato ao conteúdo correspondente.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">2</div>
+            <div>
+              <h3>Página personalizada</h3>
+              <p>O aluno abre uma página clara, com vídeo e instruções de uso do exercício.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-number">3</div>
+            <div>
+              <h3>Treino com mais autonomia</h3>
+              <p>O aluno aprende na hora e a academia entrega uma experiência mais moderna e profissional.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Demonstração</div>
+          <h2>Como o GymFlow aparece na prática</h2>
+          <p>
+            Ainda sem prints? Sem problema. Já deixei o site com uma apresentação visual forte,
+            pronta para você depois trocar por imagens reais do sistema.
+          </p>
+        </div>
+
+        <div class="mock-grid">
+          <div class="mock">
+            <div class="mock-label">Tela do exercício</div>
+            <h4>Vídeo + orientação rápida</h4>
+            <p>Área pronta para mostrar como o aluno acessa o conteúdo ao escanear o aparelho.</p>
+          </div>
+          <div class="mock">
+            <div class="mock-label">Página personalizada</div>
+            <h4>Identidade da academia</h4>
+            <p>Visual adaptado com logo, cores e aparência mais profissional para cada cliente.</p>
+          </div>
+          <div class="mock">
+            <div class="mock-label">Experiência premium</div>
+            <h4>Tecnologia que valoriza o espaço</h4>
+            <p>Um detalhe simples que aumenta a percepção de organização, cuidado e inovação.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="investimento">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Investimento</div>
+          <h2>Um valor acessível para uma melhoria real na academia</h2>
+          <p>
+            Implantação profissional com personalização e estrutura pronta para uso.
+          </p>
+        </div>
+
+        <div class="price-wrap">
+          <div class="price-card">
+            <div class="price-kicker">Implantação</div>
+            <div class="price-big">R$ 497</div>
+            <div class="price-note">Pagamento de implantação do sistema</div>
+
+            <ul class="price-list">
+              <li><span>✓</span> Personalização com identidade da academia</li>
+              <li><span>✓</span> Criação das páginas dos exercícios</li>
+              <li><span>✓</span> Geração de todos os QR Codes</li>
+              <li><span>✓</span> Sistema pronto para uso imediato</li>
+            </ul>
+          </div>
+
+          <div class="price-card">
+            <div class="price-kicker">Mensalidade</div>
+            <div class="price-big">R$ 49</div>
+            <div class="price-note">Valor mensal para manter o sistema ativo</div>
+
+            <ul class="price-list">
+              <li><span>✓</span> Manutenção da estrutura online</li>
+              <li><span>✓</span> Continuidade do acesso pelo celular</li>
+              <li><span>✓</span> Atualizações e suporte básico</li>
+              <li><span>✓</span> Presença digital mais profissional</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Perguntas rápidas</div>
+          <h2>Dúvidas que o dono da academia costuma ter</h2>
+        </div>
+
+        <div class="faq">
+          <div class="faq-item">
+            <h3>Precisa baixar aplicativo?</h3>
+            <p>Não. O aluno aponta a câmera do celular para o QR Code e acessa direto no navegador.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Dá para personalizar para cada academia?</h3>
+            <p>Sim. O sistema pode ser configurado com a identidade visual e o estilo do cliente.</p>
+          </div>
+
+          <div class="faq-item">
+            <h3>Posso começar com poucos aparelhos?</h3>
+            <p>Sim. Dá para iniciar com uma implantação menor e expandir depois.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-box">
+          <div class="eyebrow">Pronto para vender</div>
+          <h2>Quer implantar o GymFlow na sua academia?</h2>
+          <p>
+            Fale direto no WhatsApp e veja como o GymFlow pode transformar a experiência do aluno,
+            valorizar sua academia e trazer uma imagem mais moderna para o seu negócio.
+          </p>
+          <div class="cta-row" style="justify-content:center; margin-top:24px;">
+            <a class="btn btn-primary" href="https://wa.me/5514997073447?text=Olá%2C%20quero%20implantar%20o%20GymFlow%20na%20minha%20academia" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      GymFlow — Sistema inteligente de orientação de exercícios por QR Code.
+    </div>
+  </footer>
+</body>
+</html>
